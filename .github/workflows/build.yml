@@ -5,14 +5,14 @@ name: Package
       target:
         description: Platform to package
         type: choice
-        default: windows
+        default: all
         options:
+        - all
         - windows
         - android
         - macos
         - linux
         - ios
-        - all
       source_ref:
         description: Private source branch, tag, or commit
         type: string
