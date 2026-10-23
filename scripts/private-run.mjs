@@ -12,17 +12,17 @@ if (!input || key.length !== 32) {
   console.error('Private build logging is not configured; refusing to run.');
   process.exit(1);
 }
-const logDir = path.join(process.env.RUNNER_TEMP || os.tmpdir(), 'tutu-build-logs');
+const logDir = path.join(process.env.RUNNER_TEMP || os.tmpdir(), 'build-logs');
 fs.mkdirSync(logDir, { recursive: true, mode: 0o700 });
 const nonce = crypto.randomBytes(12);
 const id = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
 const log = fs.createWriteStream(path.join(logDir, `${id}.enc`), { mode: 0o600 });
-log.write(Buffer.from('TUTULOG1'));
+log.write(Buffer.from('BLDLOG01'));
 log.write(nonce);
 const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
 cipher.pipe(log, { end: false });
 const isWindows = process.platform === 'win32';
-const script = path.join(os.tmpdir(), `tutu-step-${id}.${isWindows ? 'ps1' : 'sh'}`);
+const script = path.join(os.tmpdir(), `build-step-${id}.${isWindows ? 'ps1' : 'sh'}`);
 let text = fs.readFileSync(input, 'utf8');
 if (isWindows) {
   text = "$ErrorActionPreference = 'Stop'\n$PSNativeCommandUseErrorActionPreference = $true\n" + text +

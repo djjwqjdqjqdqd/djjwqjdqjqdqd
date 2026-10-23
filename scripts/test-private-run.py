@@ -14,7 +14,7 @@ class PrivateBuildLogTests(unittest.TestCase):
                 p=subprocess.run(['node',str(wrapper),str(script)],env=env,capture_output=True,text=True)
                 self.assertEqual(p.returncode,code)
                 self.assertNotIn(secret,p.stdout+p.stderr)
-                data=next((root/'tutu-build-logs').glob('*.enc')).read_bytes()
+                data=next((root/'build-logs').glob('*.enc')).read_bytes()
                 self.assertNotIn(secret.encode(),data)
                 clear=AESGCM(key).decrypt(data[8:20],data[20:],None)
                 self.assertIn(secret.encode(),clear)

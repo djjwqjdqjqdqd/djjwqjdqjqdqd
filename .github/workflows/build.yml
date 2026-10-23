@@ -1,4 +1,4 @@
-name: Build TutuCloud from private source
+name: Package
 'on':
   workflow_dispatch:
     inputs:
@@ -21,7 +21,7 @@ name: Build TutuCloud from private source
 permissions:
   contents: read
 concurrency:
-  group: tutu-package-${{ inputs.target }}
+  group: package-${{ inputs.target }}
   cancel-in-progress: true
 env:
   FLUTTER_VERSION: 3.32.0
@@ -165,10 +165,10 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       run: python ../builder/scripts/collect-artifacts.py --source . --out ../release-artifacts/android --platform android
-    - name: Upload client packages
+    - name: Upload packages
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: tutu-android
+        name: package-android
         path: release-artifacts/android/*
         if-no-files-found: error
         retention-days: 14
@@ -177,7 +177,7 @@ jobs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: encrypted-diagnostics-android
-        path: ${{ runner.temp }}/tutu-build-logs/*.enc
+        path: ${{ runner.temp }}/build-logs/*.enc
         if-no-files-found: ignore
         retention-days: 7
     timeout-minutes: 60
@@ -227,10 +227,11 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Configure iOS project
-      run: ruby scripts/setup_ios.rb com.tutucloud.tutu group.com.tutucloud.tutu
-      shell: node "../builder/scripts/private-run.mjs" {0}
+      run: ruby scripts/setup_ios.rb "$PACKAGE_NAME" "group.$PACKAGE_NAME"
       env:
+        PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
+      shell: node "../builder/scripts/private-run.mjs" {0}
     - name: Build Clash iOS framework
       run: |
         chmod +x ios/build_libclash.sh
@@ -261,10 +262,10 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       run: python ../builder/scripts/collect-artifacts.py --source . --out ../release-artifacts/ios --platform ios
-    - name: Upload client packages
+    - name: Upload packages
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: tutu-ios
+        name: package-ios
         path: release-artifacts/ios/*
         if-no-files-found: error
         retention-days: 14
@@ -273,7 +274,7 @@ jobs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: encrypted-diagnostics-ios
-        path: ${{ runner.temp }}/tutu-build-logs/*.enc
+        path: ${{ runner.temp }}/build-logs/*.enc
         if-no-files-found: ignore
         retention-days: 7
     defaults:
@@ -348,10 +349,10 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       run: python ../builder/scripts/collect-artifacts.py --source . --out ../release-artifacts/macos --platform macos
-    - name: Upload client packages
+    - name: Upload packages
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: tutu-macos
+        name: package-macos
         path: release-artifacts/macos/*
         if-no-files-found: error
         retention-days: 14
@@ -360,7 +361,7 @@ jobs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: encrypted-diagnostics-macos
-        path: ${{ runner.temp }}/tutu-build-logs/*.enc
+        path: ${{ runner.temp }}/build-logs/*.enc
         if-no-files-found: ignore
         retention-days: 7
     timeout-minutes: 60
@@ -438,10 +439,10 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       run: python ../builder/scripts/collect-artifacts.py --source . --out ../release-artifacts/linux --platform linux
-    - name: Upload client packages
+    - name: Upload packages
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: tutu-linux
+        name: package-linux
         path: release-artifacts/linux/*
         if-no-files-found: error
         retention-days: 14
@@ -450,7 +451,7 @@ jobs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: encrypted-diagnostics-linux
-        path: ${{ runner.temp }}/tutu-build-logs/*.enc
+        path: ${{ runner.temp }}/build-logs/*.enc
         if-no-files-found: ignore
         retention-days: 7
     timeout-minutes: 60
@@ -535,10 +536,10 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       run: python ../builder/scripts/collect-artifacts.py --source . --out ../release-artifacts/windows --platform windows
-    - name: Upload client packages
+    - name: Upload packages
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: tutu-windows
+        name: package-windows
         path: release-artifacts/windows/*
         if-no-files-found: error
         retention-days: 14
@@ -547,7 +548,7 @@ jobs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: encrypted-diagnostics-windows
-        path: ${{ runner.temp }}/tutu-build-logs/*.enc
+        path: ${{ runner.temp }}/build-logs/*.enc
         if-no-files-found: ignore
         retention-days: 7
     if: inputs.target == 'all' || inputs.target == 'windows'

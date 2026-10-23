@@ -16,7 +16,7 @@ class FinalPackageTests(unittest.TestCase):
             staging=dist/'temporary-setup';staging.mkdir()
             (staging/'private-source.dart').write_text('private source fixture')
             (staging/'keystore.jks').write_bytes(b'signing fixture')
-            (staging/'TutuCloud.exe').write_bytes(b'temporary executable')
+            (staging/'application.exe').write_bytes(b'temporary executable')
             subprocess.run(['python',str(collector),'--source',str(source),'--out',str(out),'--platform','windows'],capture_output=True,check=True)
             self.assertEqual({p.name for p in out.iterdir()},{'fl_clash-windows.zip','fl_clash-windows-setup.exe','build-manifest.json'})
             manifest=json.loads((out/'build-manifest.json').read_text())

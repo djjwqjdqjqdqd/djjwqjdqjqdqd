@@ -19,7 +19,7 @@ if dist.exists():
 if args.platform=='ios':
     framework=source/'ios/Frameworks/libclash.xcframework'
     if framework.is_dir():
-        archive=out/f'TutuCloud-{version}-ios-framework.zip'
+        archive=out/f'package-{version}-ios-framework.zip'
         with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as z:
             for file in framework.rglob('*'):
                 if file.is_file() and not file.is_symlink():z.write(file,file.relative_to(framework.parent))
