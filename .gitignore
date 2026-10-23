@@ -3,3 +3,7 @@ private-build-logs/
 *.enc
 *.key
 *.pem
+*.log
+.env
+release-artifacts/
+__pycache__/
