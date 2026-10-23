@@ -134,6 +134,15 @@ jobs:
           echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/local.properties
         fi
       shell: node "../builder/scripts/private-run.mjs" {0}
+    - name: Initialize Gradle distribution
+      timeout-minutes: 8
+      shell: node "../builder/scripts/private-run.mjs" {0}
+      env:
+        BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
+      run: |-
+        cd android
+        chmod +x gradlew
+        ./gradlew --version --console=plain
     - name: Build
       env:
         ANDROID_UNIVERSAL_APK: '1'
@@ -150,6 +159,7 @@ jobs:
         APP_NAME_EN: ${{ secrets.APP_NAME_EN }}
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
+        ANDROID_BUILD_VERBOSE: '1'
       run: |
         export PATH="$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin"
         export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
@@ -160,6 +170,7 @@ jobs:
         flutter pub get
         dart run setup.dart android --out app
       shell: node "../builder/scripts/private-run.mjs" {0}
+      timeout-minutes: 85
     - name: Collect final packages only
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
@@ -180,7 +191,7 @@ jobs:
         path: ${{ runner.temp }}/build-logs/*.enc
         if-no-files-found: ignore
         retention-days: 7
-    timeout-minutes: 60
+    timeout-minutes: 100
     defaults:
       run:
         working-directory: source
