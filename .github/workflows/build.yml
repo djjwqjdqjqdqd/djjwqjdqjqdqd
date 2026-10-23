@@ -140,6 +140,8 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       run: |-
+        cp -n "$FLUTTER_ROOT/bin/cache/artifacts/gradle_wrapper/gradlew" android/gradlew
+        cp -n "$FLUTTER_ROOT/bin/cache/artifacts/gradle_wrapper/gradle/wrapper/gradle-wrapper.jar" android/gradle/wrapper/gradle-wrapper.jar
         cd android
         chmod +x gradlew
         ./gradlew --version --console=plain
