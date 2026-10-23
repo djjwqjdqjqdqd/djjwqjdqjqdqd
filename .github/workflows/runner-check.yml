@@ -1,0 +1,12 @@
+name: Check public Windows runner
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: windows-2022
+    steps:
+      - name: Check runner availability
+        shell: pwsh
+        run: Write-Output "Public Windows runner is available."

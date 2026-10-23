@@ -1,0 +1,5 @@
+source/
+private-build-logs/
+*.enc
+*.key
+*.pem
