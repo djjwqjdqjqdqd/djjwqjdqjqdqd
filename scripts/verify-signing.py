@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory(prefix='signing-check-') as temp:
         if p.returncode:raise RuntimeError('APK signature verification failed')
         fingerprints=re.findall(r'Signer #\d+ certificate SHA-256 digest:\s*([0-9a-fA-F]{64})',p.stdout)
         if {v.lower() for v in fingerprints}!={expected}:raise RuntimeError('APK signing identity differs from the preserved release keystore')
-        packages.append({'name':apk.name,'certificate_sha256':expected,'signature_valid':True,'preserved_keystore_matches':True})
+        packages.append({'name':apk.name,'signature_valid':True,'preserved_keystore_matches':True})
 report={'packages':packages,'signing_identity_preserved':True}
 Path('signing-report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 print('APK signature is valid and matches the preserved release keystore.')
