@@ -253,6 +253,13 @@ jobs:
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       shell: node "../builder/scripts/private-run.mjs" {0}
+    - name: Verify lifecycle transitions
+      run: |
+        swiftc -swift-version 5 ios/Runner/VPNLifecycle.swift scripts/test_ios_vpn_lifecycle.swift -o "$RUNNER_TEMP/vpn-lifecycle-test"
+        "$RUNNER_TEMP/vpn-lifecycle-test"
+      shell: node "../builder/scripts/private-run.mjs" {0}
+      env:
+        BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Build Clash iOS framework
       run: 'chmod +x ios/build_libclash.sh
 
@@ -379,6 +386,11 @@ jobs:
 
         '
       shell: node "../builder/scripts/private-run.mjs" {0}
+    - name: Verify embedded core
+      run: python3 scripts/verify_macos_core.py
+      shell: node "../builder/scripts/private-run.mjs" {0}
+      env:
+        BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Collect final packages only
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
@@ -594,6 +606,10 @@ jobs:
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         python scripts/verify_windows_renderer.py --dist dist
+
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        python scripts/verify_windows_driver.py --dist dist
 
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
