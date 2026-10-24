@@ -173,6 +173,7 @@ jobs:
         flutter pub get
 
         dart run setup.dart android --out app
+        python3 scripts/verify_android_core.py
 
         '
       shell: node "../builder/scripts/private-run.mjs" {0}
