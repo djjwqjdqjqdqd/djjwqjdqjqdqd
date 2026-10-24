@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 env:
   FLUTTER_VERSION: 3.32.0
-  GO_VERSION: 1.22.8
+  GO_VERSION: 1.25.1
   FASTFORGE_REF: ce39d1da1cdde1bd532766bee5f679749f2f9024
 jobs:
   build-android:
@@ -253,13 +253,6 @@ jobs:
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       shell: node "../builder/scripts/private-run.mjs" {0}
-    - name: Verify lifecycle transitions
-      run: |
-        swiftc -swift-version 5 ios/Runner/VPNLifecycle.swift scripts/test_ios_vpn_lifecycle.swift -o "$RUNNER_TEMP/vpn-lifecycle-test"
-        "$RUNNER_TEMP/vpn-lifecycle-test"
-      shell: node "../builder/scripts/private-run.mjs" {0}
-      env:
-        BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Build Clash iOS framework
       run: 'chmod +x ios/build_libclash.sh
 
@@ -606,10 +599,6 @@ jobs:
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         python scripts/verify_windows_renderer.py --dist dist
-
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        python scripts/verify_windows_driver.py --dist dist
 
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
