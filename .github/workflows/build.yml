@@ -49,14 +49,21 @@ jobs:
         submodules: false
         path: source
     - name: Free disk space
-      run: |
-        set -x
+      run: 'set -x
+
         # 下一步会用 sdkmanager 装 ndk;28.0.13004108，预装的其他 NDK 版本用不到
+
         sudo rm -rf "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/ndk/* || true
+
         sudo rm -rf /opt/hostedtoolcache/CodeQL || true
+
         sudo rm -rf /usr/share/dotnet /usr/share/swift /opt/ghc || true
+
         sudo rm -rf /usr/local/share/boost /usr/local/lib/node_modules || true
+
         sudo apt-get clean || true
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
@@ -64,27 +71,22 @@ jobs:
       with:
         distribution: temurin
         java-version: '17'
+    - name: Install compiler
+      uses: dtolnay/rust-toolchain@035fceb3c12fb0c6a9461b52775e16473133e591
+      with:
+        toolchain: 1.95.0
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: false
     - name: Android command-line tools + SDK
-      run: |
-        set -e
-        export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
-        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-        mkdir -p "$ANDROID_HOME/cmdline-tools"
-        if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
-          curl -sSfL "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" -o /tmp/cmdline.zip
-          rm -rf /tmp/cmdline
-          mkdir -p /tmp/cmdline
-          unzip -q /tmp/cmdline.zip -d /tmp/cmdline
-          mv /tmp/cmdline/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
-        fi
-        export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
-        yes | sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.0.13004108" "cmdline-tools;latest" || true
-        echo "ANDROID_NDK=$ANDROID_HOME/ndk/28.0.13004108" >> $GITHUB_ENV
+      run: "set -e\nexport ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Android/Sdk}\"\necho \"ANDROID_HOME=$ANDROID_HOME\" >> $GITHUB_ENV\n\
+        echo \"ANDROID_SDK_ROOT=$ANDROID_HOME\" >> $GITHUB_ENV\nmkdir -p \"$ANDROID_HOME/cmdline-tools\"\nif [ ! -d \"$ANDROID_HOME/cmdline-tools/latest\"\
+        \ ]; then\n  curl -sSfL \"https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip\" -o\
+        \ /tmp/cmdline.zip\n  rm -rf /tmp/cmdline\n  mkdir -p /tmp/cmdline\n  unzip -q /tmp/cmdline.zip -d /tmp/cmdline\n\
+        \  mv /tmp/cmdline/cmdline-tools \"$ANDROID_HOME/cmdline-tools/latest\"\nfi\nexport PATH=\"$PATH:$ANDROID_HOME/cmdline-tools/latest/bin\"\
+        \nyes | sdkmanager \"platforms;android-35\" \"build-tools;35.0.0\" \"ndk;28.0.13004108\" \"cmdline-tools;latest\"\
+        \ || true\necho \"ANDROID_NDK=$ANDROID_HOME/ndk/28.0.13004108\" >> $GITHUB_ENV\n"
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
@@ -94,12 +96,17 @@ jobs:
         flutter-version: ${{ env.FLUTTER_VERSION }}
         cache: false
     - name: Android licenses
-      run: |
-        export PATH="$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin"
+      run: 'export PATH="$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin"
+
         export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
+
         export ANDROID_SDK_ROOT="$ANDROID_HOME"
+
         yes | flutter doctor --android-licenses || true
+
         flutter doctor -v
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
@@ -110,41 +117,30 @@ jobs:
         ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
-      run: |
-        set -e
-        if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_STORE_PASSWORD" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
-          echo "Android signing secrets are not fully configured, skipping release signing restore."
-          exit 0
-        fi
-        echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-        touch android/local.properties
-        if grep -q '^storePassword=' android/local.properties; then
-          sed -i "s#^storePassword=.*#storePassword=$ANDROID_STORE_PASSWORD#" android/local.properties
-        else
-          echo "storePassword=$ANDROID_STORE_PASSWORD" >> android/local.properties
-        fi
-        if grep -q '^keyAlias=' android/local.properties; then
-          sed -i "s#^keyAlias=.*#keyAlias=$ANDROID_KEY_ALIAS#" android/local.properties
-        else
-          echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/local.properties
-        fi
-        if grep -q '^keyPassword=' android/local.properties; then
-          sed -i "s#^keyPassword=.*#keyPassword=$ANDROID_KEY_PASSWORD#" android/local.properties
-        else
-          echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/local.properties
-        fi
+      run: "set -e\nif [ -z \"$ANDROID_KEYSTORE_BASE64\" ] || [ -z \"$ANDROID_KEY_ALIAS\" ] || [ -z \"$ANDROID_STORE_PASSWORD\"\
+        \ ] || [ -z \"$ANDROID_KEY_PASSWORD\" ]; then\n  echo \"Android signing secrets are not fully configured, skipping\
+        \ release signing restore.\"\n  exit 0\nfi\necho \"$ANDROID_KEYSTORE_BASE64\" | base64 -d > android/app/keystore.jks\n\
+        touch android/local.properties\nif grep -q '^storePassword=' android/local.properties; then\n  sed -i \"s#^storePassword=.*#storePassword=$ANDROID_STORE_PASSWORD#\"\
+        \ android/local.properties\nelse\n  echo \"storePassword=$ANDROID_STORE_PASSWORD\" >> android/local.properties\nfi\n\
+        if grep -q '^keyAlias=' android/local.properties; then\n  sed -i \"s#^keyAlias=.*#keyAlias=$ANDROID_KEY_ALIAS#\" android/local.properties\n\
+        else\n  echo \"keyAlias=$ANDROID_KEY_ALIAS\" >> android/local.properties\nfi\nif grep -q '^keyPassword=' android/local.properties;\
+        \ then\n  sed -i \"s#^keyPassword=.*#keyPassword=$ANDROID_KEY_PASSWORD#\" android/local.properties\nelse\n  echo \"\
+        keyPassword=$ANDROID_KEY_PASSWORD\" >> android/local.properties\nfi\n"
       shell: node "../builder/scripts/private-run.mjs" {0}
     - name: Initialize Gradle distribution
       timeout-minutes: 8
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
-      run: |-
-        cp -n "$FLUTTER_ROOT/bin/cache/artifacts/gradle_wrapper/gradlew" android/gradlew
+      run: 'cp -n "$FLUTTER_ROOT/bin/cache/artifacts/gradle_wrapper/gradlew" android/gradlew
+
         cp -n "$FLUTTER_ROOT/bin/cache/artifacts/gradle_wrapper/gradle/wrapper/gradle-wrapper.jar" android/gradle/wrapper/gradle-wrapper.jar
+
         cd android
+
         chmod +x gradlew
-        ./gradlew --version --console=plain
+
+        ./gradlew --version --console=plain'
     - name: Build
       env:
         ANDROID_UNIVERSAL_APK: '1'
@@ -162,15 +158,23 @@ jobs:
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
         ANDROID_BUILD_VERBOSE: '1'
-      run: |
-        export PATH="$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin"
+      run: 'export PATH="$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin"
+
         export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
+
         export ANDROID_SDK_ROOT="$ANDROID_HOME"
+
         echo "Using ANDROID_NDK=$ANDROID_NDK"
+
         dart --version
+
         flutter --version
+
         flutter pub get
+
         dart run setup.dart android --out app
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       timeout-minutes: 85
     - name: Collect final packages only
@@ -224,6 +228,10 @@ jobs:
         flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: stable
         cache: false
+    - name: Install compiler
+      uses: dtolnay/rust-toolchain@035fceb3c12fb0c6a9461b52775e16473133e591
+      with:
+        toolchain: 1.95.0
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
       with:
@@ -246,9 +254,11 @@ jobs:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       shell: node "../builder/scripts/private-run.mjs" {0}
     - name: Build Clash iOS framework
-      run: |
-        chmod +x ios/build_libclash.sh
+      run: 'chmod +x ios/build_libclash.sh
+
         ios/build_libclash.sh
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
@@ -313,6 +323,10 @@ jobs:
         fetch-depth: 1
         submodules: false
         path: source
+    - name: Install compiler
+      uses: dtolnay/rust-toolchain@035fceb3c12fb0c6a9461b52775e16473133e591
+      with:
+        toolchain: 1.95.0
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
       with:
         go-version: ${{ env.GO_VERSION }}
@@ -328,12 +342,17 @@ jobs:
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Vendoring flutter_distributor (required by setup.dart)
-      run: |
-        rm -rf plugins/flutter_distributor
+      run: 'rm -rf plugins/flutter_distributor
+
         git init plugins/flutter_distributor
+
         git -C plugins/flutter_distributor remote add origin https://github.com/fastforgedev/fastforge.git
+
         git -C plugins/flutter_distributor fetch --depth 1 origin "$FASTFORGE_REF"
+
         git -C plugins/flutter_distributor checkout --detach FETCH_HEAD
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
@@ -352,10 +371,13 @@ jobs:
         APP_NAME_EN: ${{ secrets.APP_NAME_EN }}
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
-      run: |
-        export PATH="/opt/homebrew/bin:$PATH"
+      run: 'export PATH="/opt/homebrew/bin:$PATH"
+
         flutter pub get
+
         dart run setup.dart macos --arch universal --out app --env stable
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
     - name: Collect final packages only
       shell: node "../builder/scripts/private-run.mjs" {0}
@@ -401,6 +423,10 @@ jobs:
         fetch-depth: 1
         submodules: false
         path: source
+    - name: Install compiler
+      uses: dtolnay/rust-toolchain@035fceb3c12fb0c6a9461b52775e16473133e591
+      with:
+        toolchain: 1.95.0
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
       with:
         go-version: ${{ env.GO_VERSION }}
@@ -411,19 +437,27 @@ jobs:
         flutter-version: ${{ env.FLUTTER_VERSION }}
         cache: false
     - name: Linux deps
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y ninja-build libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libayatana-appindicator3-dev libkeybinder-3.0-dev libfuse2 rpm patchelf
+      run: 'sudo apt-get update -y
+
+        sudo apt-get install -y ninja-build libgtk-3-dev libwebkit2gtk-4.1-dev libsecret-1-dev libayatana-appindicator3-dev
+        libkeybinder-3.0-dev libfuse2 rpm patchelf
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Vendoring flutter_distributor
-      run: |
-        rm -rf plugins/flutter_distributor
+      run: 'rm -rf plugins/flutter_distributor
+
         git init plugins/flutter_distributor
+
         git -C plugins/flutter_distributor remote add origin https://github.com/fastforgedev/fastforge.git
+
         git -C plugins/flutter_distributor fetch --depth 1 origin "$FASTFORGE_REF"
+
         git -C plugins/flutter_distributor checkout --detach FETCH_HEAD
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
@@ -442,10 +476,13 @@ jobs:
         APP_NAME_EN: ${{ secrets.APP_NAME_EN }}
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
-      run: |
-        sudo apt-get install -y libfuse2
+      run: 'sudo apt-get install -y libfuse2
+
         flutter pub get
+
         dart run setup.dart linux --arch amd64 --out app --env stable
+
+        '
       shell: node "../builder/scripts/private-run.mjs" {0}
     - name: Collect final packages only
       shell: node "../builder/scripts/private-run.mjs" {0}
@@ -490,11 +527,14 @@ jobs:
         fetch-depth: 1
         submodules: false
         path: source
+    - name: Install compiler
+      uses: dtolnay/rust-toolchain@035fceb3c12fb0c6a9461b52775e16473133e591
+      with:
+        toolchain: 1.95.0
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: false
-    - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
     - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
     - uses: NuGet/setup-nuget@d105a947828025cd7a980103c35ba2bfae586d0f
     - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
@@ -504,15 +544,24 @@ jobs:
         cache: false
     - name: Vendoring flutter_distributor
       shell: node "../builder/scripts/private-run.mjs" {0}
-      run: |
-        $sourceRoot = (Get-Location).ProviderPath
-        $distributorPath = [IO.Path]::GetFullPath((Join-Path $sourceRoot 'plugins\flutter_distributor'))
-        if (-not $distributorPath.StartsWith($sourceRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Distributor path is outside the source workspace' }
+      run: '$sourceRoot = (Get-Location).ProviderPath
+
+        $distributorPath = [IO.Path]::GetFullPath((Join-Path $sourceRoot ''plugins\flutter_distributor''))
+
+        if (-not $distributorPath.StartsWith($sourceRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase))
+        { throw ''Distributor path is outside the source workspace'' }
+
         if (Test-Path -LiteralPath $distributorPath) { Remove-Item -LiteralPath $distributorPath -Recurse -Force }
+
         git init plugins\flutter_distributor
+
         git -C plugins\flutter_distributor remote add origin https://github.com/fastforgedev/fastforge.git
+
         git -C plugins\flutter_distributor fetch --depth 1 origin $env:FASTFORGE_REF
+
         git -C plugins\flutter_distributor checkout --detach FETCH_HEAD
+
+        '
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Build
@@ -531,17 +580,24 @@ jobs:
         PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
       shell: node "../builder/scripts/private-run.mjs" {0}
-      run: |
-        flutter pub get
+      run: 'flutter pub get
+
         flutter doctor
+
         dart run setup.dart windows --arch amd64 --out app --env stable
+
+        '
     - name: Verify Windows software renderer before publication
       shell: node "../builder/scripts/private-run.mjs" {0}
-      run: |
-        python scripts/test_windows_renderer_verification.py
+      run: 'python scripts/test_windows_renderer_verification.py
+
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
         python scripts/verify_windows_renderer.py --dist dist
+
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        '
       env:
         BUILD_LOG_KEY: ${{ secrets.BUILD_LOG_KEY }}
     - name: Collect final packages only
